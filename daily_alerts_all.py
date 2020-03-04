@@ -11,16 +11,19 @@ from  datetime import *
 import locale
 locale.setlocale(locale.LC_ALL, 'en_US.UTF8')
 
-#import logging 
+from os import environ
+
+# activate these lines for tracing
+#import logging
 #logging.basicConfig(filename='pyzabbix_debug.log',level=logging.DEBUG)
 
 # The hostname at which the Zabbix web interface is available
-ZABBIX_SERVER = 'https://zabbix'
+ZABBIX_SERVER = 'https://'+environ['Zhost']+'/zabbix'
 
 zapi = ZabbixAPI(ZABBIX_SERVER)
-  
+
 # Login to the Zabbix API
-zapi.login('xxxxxxx', 'yyyyyyyyy')
+zapi.login(environ['Zuser'], environ['Zpass'])
 
 today_8am = datetime.combine(date.today(), time(8))
 yesterday_8am = today_8am - timedelta(days=1)

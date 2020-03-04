@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/python3
 
 #
 # web_vhost_gen.py
@@ -17,18 +17,19 @@ from pyzabbix import ZabbixAPI
 import json
 import sys
 from operator import itemgetter
+from os import environ
 
 # activate these lines for tracing
-#import logging
-#logging.basicConfig(filename='pyzabbix_debug.log',level=logging.DEBUG)
+import logging
+logging.basicConfig(filename='pyzabbix_debug.log',level=logging.DEBUG)
 
 # The hostname at which the Zabbix web interface is available
-ZABBIX_SERVER = 'https://......................'
+ZABBIX_SERVER = 'https://'+environ['Zhost']+'/zabbix'
 
 zapi = ZabbixAPI(ZABBIX_SERVER)
 
 # Login to the Zabbix API
-zapi.login('Admin', 'zabbix')
+zapi.login(environ['Zuser'], environ['Zpass'])
 
 # Command line arg is the host to process
 target_host = str(sys.argv[1])
@@ -56,7 +57,7 @@ for application in applications:
       appid = application['applicationid']
 
 if not appexists:
-   print "Creating new application for", hostId	
+   print("Creating new application for", hostId)	
    create_result = zapi.application.create(hostid=hostId,name="ZBX_Vhost")
 #  print json.dumps(create_result, indent=4, sort_keys=True)
    appid = create_result['applicationids'][0]
@@ -90,7 +91,7 @@ for interface in sorted(host['interfaces'], key=itemgetter('main'), reverse=True
       continue
    
    if interface['port'] != '80':
-	   print 'Creating cert check item for', interface['dns']
+	   print('Creating cert check item for', interface['dns'])
 	   this_key = 'cert_days_left.sh['+interface['dns']+','+interface['port']+']'
 	   item_resp = zapi.item.create({ 'name' : '$1 SSL Certificate days till expiration', 
 	      'key_' : this_key,
@@ -134,7 +135,7 @@ for interface in sorted(host['interfaces'], key=itemgetter('main'), reverse=True
 
 	#  print ' '
 
-   print 'Creating http web test for ', interface['dns']
+   print('Creating http web test for ', interface['dns'])
    web_resp = zapi.httptest.create({ 'name' : interface['dns']+' http test',
         'hostid' : hostId,
         'applicationid' : appid,
@@ -153,7 +154,7 @@ for interface in sorted(host['interfaces'], key=itemgetter('main'), reverse=True
        }) 
 
    if interface['port'] != '80':
-	   print 'Creating https web test'
+	   print('Creating https web test')
 	   web_resp = zapi.httptest.create({ 'name' : interface['dns']+' https test',
 		'hostid' : hostId,
 		'applicationid' : appid,
